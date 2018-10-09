@@ -1,14 +1,19 @@
 <template>
   <div :style="liveRenderStyle">
-    <div class="html-layer"></div>
-    <div class="canvas-layer" :id="canvasID"></div>
+    <div :style="contentLayerStyle" class="content-layer html-layer">
+      <div class='html-junction' v-for="(d, i) in journeyData" v-if="d.type == JourneyElements.HTML && d.state == JourneyElementStates.OPEN" :key="'html_'+i.toString()" :style="'left:'+d.position.x+'px;top:'+d.position.y+'px;'" v-html="d.content" v-on:click="onJourneyMapElementClicked(d)"></div>
+      <div class='video-junction' v-for="(d, i) in journeyData" v-if="d.type == JourneyElements.YOUTUBE && d.state == JourneyElementStates.OPEN" :key="'video_'+i.toString()" :style="'left:'+d.position.x+'px;top:'+d.position.y+'px;'">
+        <iframe width="280" height="160" :src="d.content" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div :style="contentLayerStyle" class="content-layer canvas-layer" :id="canvasID"></div>
   </div>
 </template>
 
 <script>
 import {PixiManager} from './components/utils/pixi/PixiHelper.js'
 import {Snake} from './components/utils/Snake.js'
-import {Unfolder} from './components/utils/pixi/Unfolder.js'
+// import {Unfolder} from './components/utils/pixi/Unfolder.js'
 import {JourneyElements, JourneyElementStates} from './components/utils/JourneyStates.js'
 export default {
   name: 'app',
@@ -17,7 +22,19 @@ export default {
       pixiManager: {},
       canvasID: 'stage_' + Math.random().toString().split('.').join('') + Math.random().toString().split('.').join('') + Math.random().toString().split('.').join(''),
       windowProps: {scale: 1, standardHeight: 938, width: 1600, height: 1000},
+      JourneyElements: JourneyElements,
+      JourneyElementStates: JourneyElementStates,
+      snake: {},
       journeyData: [
+        {
+          id: 'j000x',
+          type: JourneyElements.HTML,
+          state: JourneyElementStates.OPEN,
+          position: {x: 50, y: 140},
+          content: '<a>Start</a>',
+          path: [],
+          children: ['j0000']
+        },
         {
           id: 'j0000',
           type: JourneyElements.SPLIT,
@@ -29,20 +46,65 @@ export default {
         },
         {
           id: 'j0001',
-          type: JourneyElements.MESSAGE,
+          type: JourneyElements.HTML,
           state: JourneyElementStates.NONE,
           position: {x: 680, y: 160},
-          content: 'src/assets/sampleSign.jpg',
+          content: '<img src="src/assets/sampleSign.jpg" style="width:auto;height:100px;" />',
           path: [{x: 450, y: 300}, {x: 500, y: 300}, {x: 500, y: 160}, {x: 650, y: 160}],
           children: []
         },
         {
           id: 'j0002',
+          type: JourneyElements.HTML,
+          state: JourneyElementStates.NONE,
+          position: {x: 610, y: 380},
+          content: '<img src="src/assets/logo.png" />',
+          path: [{x: 450, y: 300}, {x: 500, y: 300}, {x: 500, y: 420}, {x: 650, y: 420}],
+          children: ['j0003', 'j0004', 'j0005']
+        },
+        {
+          id: 'j0003',
           type: JourneyElements.JUNCTION,
           state: JourneyElementStates.NONE,
-          position: {x: 690, y: 420},
-          content: 'src/assets/logo.png',
-          path: [{x: 450, y: 300}, {x: 500, y: 300}, {x: 500, y: 420}, {x: 650, y: 420}],
+          position: {x: 475, y: 525},
+          content: 'src/assets/facebook.png',
+          path: [{x: 700, y: 550}, {x: 700, y: 650}, {x: 600, y: 650}, {x: 550, y: 550}, {x: 500, y: 550}],
+          children: []
+        },
+        {
+          id: 'j0004',
+          type: JourneyElements.HTML,
+          state: JourneyElementStates.NONE,
+          position: {x: 500, y: 750},
+          content: '<img src="src/assets/gplus-32.png" />',
+          path: [{x: 700, y: 550}, {x: 700, y: 650}, {x: 600, y: 650}, {x: 550, y: 750}, {x: 500, y: 750}],
+          children: ['j0006', 'j0007']
+        },
+        {
+          id: 'j0005',
+          type: JourneyElements.YOUTUBE,
+          state: JourneyElementStates.NONE,
+          position: {x: 780, y: 640},
+          content: 'https://www.youtube.com/embed/AvFl6UBZLv4',
+          path: [{x: 700, y: 550}, {x: 700, y: 700}, {x: 780, y: 700}],
+          children: []
+        },
+        {
+          id: 'j0006',
+          type: JourneyElements.HTML,
+          state: JourneyElementStates.NONE,
+          position: {x: 225, y: 755},
+          content: '<img src="src/assets/gplus-32.png" />',
+          path: [{x: 500, y: 750}, {x: 400, y: 750}, {x: 350, y: 780}, {x: 250, y: 780}],
+          children: []
+        },
+        {
+          id: 'j0007',
+          type: JourneyElements.YOUTUBE,
+          state: JourneyElementStates.NONE,
+          position: {x: 10, y: 390},
+          content: 'https://www.youtube.com/embed/opi8X9hQ7q8',
+          path: [{x: 500, y: 750}, {x: 380, y: 750}, {x: 380, y: 660}, {x: 150, y: 660}, {x: 150, y: 550}],
           children: []
         }
       ]
@@ -81,6 +143,7 @@ export default {
       var self = this
       var junction = self.getJunctionByID(id)
       snake.drawPath(junction.path, function () {
+        junction.state = JourneyElementStates.OPEN
         switch (junction.type) {
           case JourneyElements.SPLIT:
           {
@@ -91,17 +154,22 @@ export default {
           }
           case JourneyElements.MESSAGE:
           {
-            var unfolder = new Unfolder(self.$data.pixiManager, junction.content, {width: 300, height: 200}).init()
-            self.$data.pixiManager.app.stage.addChild(unfolder.container)
-            unfolder.container.x = junction.position.x
-            unfolder.container.y = junction.position.y
+            // var unfolder = new Unfolder(self.$data.pixiManager, junction.content, {width: 300, height: 200}).init()
+            // self.$data.pixiManager.app.stage.addChild(unfolder.container)
+            // unfolder.container.x = junction.position.x
+            // unfolder.container.y = junction.position.y
             break
           }
           case JourneyElements.JUNCTION:
           {
+            var img = self.$data.pixiManager.createImage(junction.content)
+            self.$data.pixiManager.app.stage.addChild(img)
+            img.x = junction.position.x
+            img.y = junction.position.y
             break
           }
-          case JourneyElements.VIDEO:
+          case JourneyElements.YOUTUBE:
+          case JourneyElements.VIMEO:
           {
             break
           }
@@ -112,23 +180,25 @@ export default {
         }
       })
     },
-    exampleLine: function () {
+    onJourneyMapElementClicked: function (junction) {
       var self = this
-      var snake = new Snake(self.drawLine)
-      snake.setLineProperties({color: 0xff0000, weight: 2})
-      self.executeJunction('j0000', snake)
-      // snake.setLineProperties({color: 0xff0000, weight: 2})
-      // snake.drawPath([{x: 50, y: 140}, {x: 200, y: 140}, {x: 260, y: 300}, {x: 450, y: 300}], function () {
-      //   console.log('done with line')
-      //   snake.drawPath([{x: 450, y: 300}, {x: 500, y: 300}, {x: 500, y: 160}, {x: 650, y: 160}], function () {
-      //     var unfolder = new Unfolder(self.$data.pixiManager, 'src/assets/sampleSign.jpg', {width: 300, height: 200}).init()
-      //     self.$data.pixiManager.app.stage.addChild(unfolder.container)
-      //     unfolder.container.x = 680
-      //     unfolder.container.y = 160
-      //   })
-      //   snake.drawPath([{x: 450, y: 300}, {x: 500, y: 300}, {x: 500, y: 420}, {x: 650, y: 420}], function () {
-      //   })
-      // })
+      for (var i = 0; i < junction.children.length; i++) {
+        var subJunction = self.getJunctionByID(junction.children[i])
+        if (subJunction.state !== JourneyElementStates.OPEN) {
+          self.executeJunction(junction.children[i], self.$data.snake)
+        }
+      }
+    },
+    init: function () {
+      var self = this
+      self.$data.snake = new Snake(self.drawLine)
+      self.$data.snake.setLineProperties({color: 0xff0000, weight: 2})
+      // self.executeJunction('j0000', self.$data.snake)
+      self.$data.pixiManager = new PixiManager().init(document.getElementById(self.$data.canvasID), self.$data.windowProps.width, self.$data.windowProps.height)
+      window.addEventListener('resize', function (e) {
+        self.$data.windowProps.scale = window.innerHeight / self.$data.windowProps.standardHeight
+      })
+      self.$data.windowProps.scale = window.innerHeight / self.$data.windowProps.standardHeight
     }
   },
   computed: {
@@ -136,45 +206,33 @@ export default {
       var self = this
       var size = {width: self.$data.windowProps.width, height: self.$data.windowProps.height}
       return 'position:fixed;height:' + size.height.toString() + 'px;width:' + size.width.toString() + 'px;transform: scale(' + self.$data.windowProps.scale + ');left:50%;top:50%;margin-top:-' + (size.height / 2).toString() + 'px;margin-left:-' + (size.width / 2).toString() + 'px;'
+    },
+    contentLayerStyle: function () {
+      var self = this
+      return 'height:' + self.$data.windowProps.height.toString() + 'px;width:' + self.$data.windowProps.width.toString() + 'px;'
     }
   },
   mounted: function () {
     var self = this
-    self.$data.pixiManager = new PixiManager().init(document.getElementById(self.$data.canvasID), self.$data.windowProps.width, self.$data.windowProps.height)
-    self.exampleLine()
-    window.addEventListener('resize', function (e) {
-      console.log(window.innerWidth)
-      self.$data.windowProps.scale = window.innerHeight / self.$data.windowProps.standardHeight
-    })
+    self.init()
   }
 }
 </script>
 
 <style lang="scss">
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.content-layer{
+  position:absolute;
+  left:0;
+  top:0;
+  
 }
-
-h1, h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
+.html-layer{
+  > div{
+    z-index: 200;
+    position: absolute;
+  }
+  > div.video-junction{
+    background-color:#000000;
+  }
 }
 </style>

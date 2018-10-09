@@ -2,8 +2,9 @@ const JourneyElements = {
   SPLIT: 0,
   MESSAGE: 1,
   JUNCTION: 2,
-  VIDEO: 3,
-  HTML: 4
+  YOUTUBE: 3,
+  VIMEO: 4,
+  HTML: 5
 }
 const JourneyElementStates = {
   NONE: -1,

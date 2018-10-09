@@ -1,7 +1,8 @@
 // import 'pixi.js/dist/pixi.js'
-import PIXI from 'pixi-projection'
+// import PIXI from 'pixi-projection'
+// import PIXI from '../../../../external/pixi-projection/dist/pixi-projection.js'
 function PixiManager () {
-  console.log(PIXI)
+  // console.log(PIXI)
   // var PIXI = require('pixi.js')
   this.PIXI = require('pixi.js')
   this.app = {}
@@ -37,6 +38,7 @@ function PixiManager () {
     var texture = src.textureCacheIds !== undefined && src.textureCacheIds !== null ? src : self.PIXI.Texture.fromImage(src)
     return new self.PIXI.Sprite(texture)
   }
+  /*
   this.createImage2s = function (src) {
     // console.log(self.PIXI.projection)
     var texture = src.textureCacheIds !== undefined && src.textureCacheIds !== null ? src : self.PIXI.Texture.fromImage(src)
@@ -44,6 +46,7 @@ function PixiManager () {
     // spt.anchor.set(0.5)
     return spt
   }
+  // */
   this.createCircle = function (props) {
     var properties = getDefaultProperties()
     if (props !== undefined && props !== null) {
