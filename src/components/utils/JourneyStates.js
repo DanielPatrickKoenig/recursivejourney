@@ -11,4 +11,14 @@ const JourneyElementStates = {
   OPEN: 0,
   BYBASSED: 1
 }
-export {JourneyElements, JourneyElementStates}
+const BaseJourneyItem = {
+  id: '',
+  type: JourneyElements.SPLIT,
+  state: JourneyElementStates.NONE,
+  position: {x: 0, y: 0},
+  content: '',
+  path: [],
+  children: [],
+  startingPoint: false
+}
+export {JourneyElements, JourneyElementStates, BaseJourneyItem}
