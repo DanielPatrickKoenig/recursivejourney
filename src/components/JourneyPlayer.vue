@@ -1,21 +1,23 @@
 <template>
   <div :style="liveRenderStyle">
     <div :style="contentLayerStyle" class="content-layer html-layer">
-      <div class='html-junction' v-for="(d, i) in journeyData" v-if="d.type == JourneyElements.HTML && d.state == JourneyElementStates.OPEN" :key="'html_'+i.toString()" :style="'left:'+d.position.x+'px;top:'+d.position.y+'px;'" v-html="d.content" v-on:click="onJourneyMapElementClicked(d)"></div>
-      <div class='video-junction' v-for="(d, i) in journeyData" v-if="d.type == JourneyElements.YOUTUBE && d.state == JourneyElementStates.OPEN" :key="'video_'+i.toString()" :style="'left:'+d.position.x+'px;top:'+d.position.y+'px;'">
-        <iframe width="280" height="160" :src="d.content" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
-      </div>
+      <junction :junction="d" v-for="(d, i) in journeyData" :key="'junction_'+i.toString()"></junction>
     </div>
     <div :style="contentLayerStyle" class="content-layer canvas-layer" :id="canvasID"></div>
   </div>
 </template>
 <script>
+import {EventBus} from './utils/EventBus.js'
 import {PixiManager} from './utils/pixi/PixiHelper.js'
 import {Snake} from './utils/Snake.js'
 // import {Unfolder} from './utils/pixi/Unfolder.js'
 import {JourneyElements, JourneyElementStates} from './utils/JourneyStates.js'
+import Junction from './Junction.vue'
 export default {
   props: ['jdata'],
+  components: {
+    junction: Junction
+  },
   data () {
     return {
       pixiManager: {},
@@ -53,7 +55,6 @@ export default {
           junction = self.$data.journeyData[i]
         }
       }
-      console.log(junction)
       return junction
     },
     executeJunction: function (id, snake) {
@@ -116,6 +117,9 @@ export default {
         self.$data.windowProps.scale = window.innerHeight / self.$data.windowProps.standardHeight
       })
       self.$data.windowProps.scale = window.innerHeight / self.$data.windowProps.standardHeight
+      EventBus.$on('on-junction-clicked', (n) => {
+        self.onJourneyMapElementClicked(n)
+      })
     }
   },
   computed: {
@@ -149,6 +153,11 @@ export default {
   }
   > div.video-junction{
     background-color:#000000;
+  }
+  > div.image-junction{
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
   }
 }
 </style>

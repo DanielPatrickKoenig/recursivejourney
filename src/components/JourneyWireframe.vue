@@ -3,20 +3,30 @@
     <svg>
       <path v-for="(v, i) in jitems" :key="'path_'+i.toString()" :d="getPathEncoding(v.path)"></path>
     </svg>
-    <div v-if="jitems.length > 0 && selctedindex >= 0 && jitems[selctedindex].path.length > 0">
-      <dragger v-for="(p, i) in jitems[selctedindex].path" :key="'selectepathmarker_'+i.toString()" :activatorstring="'point'+i.toString()" :coords="{left: p.x - (pointSize.width / 2), top: p.y - (pointSize.height / 2)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="i.toString()" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="pointMoverSignature">
-        <div slot="content" class="dragger-bounds"></div>
+    <div v-if="jitems.length > 0">
+      <junction :junction="d" ignorestate="true" v-for="(d, i) in jitems" :key="'junction_'+i.toString()"></junction>
+    </div>
+    <div>
+      <dragger v-for="(t, i) in jitems" :key="'itemdragger_'+i.toString()" :activatorstring="'item'+i.toString()" :coords="{left: t.position.x, top: t.position.y}" :size="{width: t.size.width, height: t.size.height}" :dragid="t.id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.itemMover">
+        <div slot="content" class="item-dragger-bounds"></div>
       </dragger>
+      <span v-for="(g, j) in jitems" :key="g+'_'+j.toString()">
+        <dragger v-if="j == selctedindex" v-for="(p, i) in jitems[j].path" :key="'selectepathmarker_'+j.toString()+'.'+i.toString()" :activatorstring="'point'+i.toString()" :coords="{left: p.x - (pointSize.width / 2), top: p.y - (pointSize.height / 2)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="j.toString()+'_'+i.toString()" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.pointMover">
+          <div slot="content" class="point-dragger-bounds"></div>
+        </dragger>
+      </span>
     </div>
   </div>
 </template>
 <script>
-import DraggableElement from './DraggableElement.vue'
 import {EventBus} from './utils/EventBus.js'
+import DraggableElement from './DraggableElement.vue'
+import Junction from './Junction.vue'
 export default {
   props: ['items', 'selctedindex'],
   components: {
-    dragger: DraggableElement
+    dragger: DraggableElement,
+    junction: Junction
   },
   data () {
     return {
@@ -28,6 +38,10 @@ export default {
       z: {
         active: 2000,
         inactive: 1
+      },
+      signatures: {
+        pointMover: 'pointmoversignaturestring',
+        itemMover: 'itemmoversignaturestring'
       },
       pointMoverSignature: 'pointmoversignaturestring'
     }
@@ -42,15 +56,53 @@ export default {
         pathString += path[i].x.toString() + ' ' + path[i].y.toString()
       }
       return pathString
+    },
+    getJunctionIndexByID: function (id) {
+      var self = this
+      var index = -1
+      for (var i = 0; i < self.$data.jitems.length; i++) {
+        if (self.$data.jitems[i].id === id) {
+          index = i
+          // junction = self.$data.journeyData[i]
+        }
+      }
+      return index
+    }
+  },
+  computed: {
+    shouldShowPath: function () {
+      var self = this
+      return self.$data.jitems.length > 0 && self.$data.selctedindex >= 0 && self.$data.jitems[self.$data.selctedindex].path.length > 0
+    },
+    getSelectedPath: function () {
+      var self = this
+      return self.$data.jitems.length > 0 && self.$data.selctedindex >= 0 ? self.$data.jitems[self.$data.selctedindex].path : []
     }
   },
   mounted: function () {
     var self = this
-    EventBus.$on('draggable-element-move' + self.$data.pointMoverSignature, (n) => {
+    EventBus.$on('draggable-element-move' + self.$data.signatures.pointMover, (n) => {
       // console.log(self.$data.jitems[self.$data.selectedItemIndex].path[Number(n.dragid)])
-      self.$data.jitems[self.selctedindex].path[Number(n.dragid)].x = n.position.left + (self.$data.pointSize.width / 2)
-      self.$data.jitems[self.selctedindex].path[Number(n.dragid)].y = n.position.top + (self.$data.pointSize.height / 2)
+      var itemIndex = Number(n.dragid.split('_')[0])
+      var pointIndex = Number(n.dragid.split('_')[1])
+      self.$data.jitems[itemIndex].path[pointIndex].x = n.position.left + (self.$data.pointSize.width / 2)
+      self.$data.jitems[itemIndex].path[pointIndex].y = n.position.top + (self.$data.pointSize.height / 2)
       console.log(n)
+    })
+    EventBus.$on('draggable-element-move' + self.$data.signatures.itemMover, (n) => {
+      // console.log(self.$data.jitems[self.$data.selectedItemIndex].path[Number(n.dragid)])
+      var index = self.getJunctionIndexByID(n.dragid)
+      console.log(n.dragid)
+      console.log(index)
+      self.$data.jitems[index].position.x = n.position.left
+      self.$data.jitems[index].position.y = n.position.top
+      console.log(n)
+    })
+    EventBus.$on('draggable-element-down' + self.$data.signatures.itemMover, (n) => {
+      // console.log(self.$data.jitems[self.$data.selectedItemIndex].path[Number(n.dragid)])
+      // var index = self.getJunctionIndexByID(n.dragid)
+      EventBus.$emit('update-selection-index', self.getJunctionIndexByID(n.dragid))
+      // self.selctedindex = self.getJunctionIndexByID(n.dragid)
     })
   }
 }
@@ -86,9 +138,14 @@ div.joureny-wireframe-component{
     bottom: 0;
   }
 }
-div.dragger-bounds{
+div.point-dragger-bounds{
   width:10px;
   height: 10px;
   background-color: #cc0000;
+}
+div.item-dragger-bounds{
+  width:100%;
+  height: 100%;
+  background-color: rgba(0,0,0,.2);
 }
 </style>

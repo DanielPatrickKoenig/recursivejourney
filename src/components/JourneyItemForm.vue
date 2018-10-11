@@ -16,6 +16,10 @@
       <label>X <input type="number" v-model="jitem.position.x" /></label>
       <label>Y <input type="number" v-model="jitem.position.y" /></label>
     </label>
+    <label>Size 
+      <label>Width <input type="number" v-model="jitem.size.width" /></label>
+      <label>Height <input type="number" v-model="jitem.size.height" /></label>
+    </label>
     <label>Path <button class="path-edit-toggle"></button></label>
     <ul>
       <li class="position-item" v-for="(p, i) in jitem.path" :key="'pathPoint_'+i.toString()">

@@ -4,7 +4,8 @@ const JourneyElements = {
   JUNCTION: 2,
   YOUTUBE: 3,
   VIMEO: 4,
-  HTML: 5
+  HTML: 5,
+  IMAGE: 6
 }
 const JourneyElementStates = {
   NONE: -1,
@@ -16,6 +17,7 @@ const BaseJourneyItem = {
   type: JourneyElements.SPLIT,
   state: JourneyElementStates.NONE,
   position: {x: 0, y: 0},
+  size: {width: 100, height: 100},
   content: '',
   path: [],
   children: [],

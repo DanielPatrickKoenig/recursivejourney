@@ -27,6 +27,7 @@
   </div>
 </template>
 <script>
+import {EventBus} from './utils/EventBus.js'
 import {JourneyElements, BaseJourneyItem} from './utils/JourneyStates.js'
 import ModalWindowComponent from './ModalwindowComponent.vue'
 import JourneyItemForm from './JourneyItemForm.vue'
@@ -95,6 +96,12 @@ export default {
       }
       return errorText
     }
+  },
+  mounted: function () {
+    var self = this
+    EventBus.$on('update-selection-index', (n) => {
+      self.selectedJourneyItem = n
+    })
   }
 }
 </script>
