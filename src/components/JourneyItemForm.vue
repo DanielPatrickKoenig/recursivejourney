@@ -3,6 +3,7 @@
     <input v-if="isnew" class="item-id-field" type="text" placeholder="please inter an id" v-model="jitem.id" />
     <label v-else class="item-id-label"><slot name="expander"></slot>{{jitem.id}}</label>
     <label>Starting Point <input type="checkbox" v-model="jitem.startingPoint" /></label>
+    <label>Auto Advance <input type="checkbox" v-model="jitem.autoAdvance" /></label>
     <!-- <label>ID <input type="text" v-model="jitem.id" /></label> -->
     
     <label>
@@ -25,6 +26,7 @@
       <li class="position-item" v-for="(p, i) in jitem.path" :key="'pathPoint_'+i.toString()">
         <label>X <input type="number" v-model="jitem.path[i].x" /></label>
         <label>Y <input type="number" v-model="jitem.path[i].y" /></label>
+        <label>Lock <input type="checkbox" v-model="jitem.path[i].lock" /></label>
         <a v-on:click="deletePoint(i)"></a>
       </li>
       <li>
@@ -67,7 +69,7 @@ export default {
   methods: {
     addPoint: function (e) {
       var self = this
-      self.$data.jitem.path.push({x: 0, y: 0})
+      self.$data.jitem.path.push({x: 0, y: 0, lock: true})
     },
     addItemChild: function () {
       var self = this

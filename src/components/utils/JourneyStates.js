@@ -21,6 +21,7 @@ const BaseJourneyItem = {
   content: '',
   path: [],
   children: [],
-  startingPoint: false
+  startingPoint: false,
+  autoAdvance: false
 }
 export {JourneyElements, JourneyElementStates, BaseJourneyItem}

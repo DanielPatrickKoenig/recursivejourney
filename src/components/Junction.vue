@@ -4,6 +4,12 @@
   <div v-else-if="shouldShow(JourneyElements.YOUTUBE)" :class="renderClasses('video-junction')" :style="'left:'+junction.position.x+'px;top:'+junction.position.y+'px;width:'+junction.size.width+'px;height:'+junction.size.height+'px;'">
     <iframe :width="junction.size.width" :height="junction.size.height" :src="junction.content" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
   </div>
+  <div v-else-if="shouldShow(JourneyElements.SPLIT)" :class="renderClasses('split-junction')" :style="'left:'+junction.position.x+'px;top:'+junction.position.y+'px;width:'+splitSize.width+'px;height:'+splitSize.height+'px;'">
+    <div>
+      <span v-if="ignorestate"></span>
+      <span v-if="ignorestate"></span>
+    </div>
+  </div>
 </template>
 <script>
 import {EventBus} from './utils/EventBus.js'
@@ -12,7 +18,8 @@ export default {
   props: ['junction', 'ignorestate'],
   data () {
     return {
-      JourneyElements: JourneyElements
+      JourneyElements: JourneyElements,
+      splitSize: {width: 50, height: 50}
     }
   },
   methods: {
@@ -43,6 +50,32 @@ div.image-junction{
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+}
+div.split-junction{
+  div{
+    width:100%;
+    height: 100%;
+    position: relative;
+    > span{
+      display: block;
+      font-size: 45px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 50%;
+      margin-top:-5px;
+    }
+    > span:last-child{
+      margin-top:13px;
+    }
+    > span:first-child::after{
+      content: "\2934";
+    }
+    > span:last-child::after{
+      content: "\2935";
+    }
+  }
 }
 </style>
 

@@ -29,17 +29,21 @@ function Snake (drawMethod, target) {
     lineProperties = props
   }
   this.drawPath = function (path, handler) {
-    var anchorPointMatrix = plotAnchorsAndPoints(path, 30)
-    // /*
-    var steps = 150
-    var finalPoints = [{x: path[0].x, y: path[0].y}]
-    for (var i = 1; i < steps; i++) {
-      var ratio = (1 / steps) * i
-      var coords = plotToCurvedPath(ratio, anchorPointMatrix.points, anchorPointMatrix.anchors)
-      finalPoints.push(coords)
+    if (path.length > 0) {
+      var anchorPointMatrix = plotAnchorsAndPoints(path, 30)
+      // /*
+      var steps = 150
+      var finalPoints = [{x: path[0].x, y: path[0].y}]
+      for (var i = 1; i < steps; i++) {
+        var ratio = (1 / steps) * i
+        var coords = plotToCurvedPath(ratio, anchorPointMatrix.points, anchorPointMatrix.anchors)
+        finalPoints.push(coords)
+      }
+      finalPoints.push({x: path[path.length - 1].x, y: path[path.length - 1].y})
+      animateLine(finalPoints, drawingTarget, 'test_line_1', handler)
+    } else {
+      handler()
     }
-    finalPoints.push({x: path[path.length - 1].x, y: path[path.length - 1].y})
-    animateLine(finalPoints, drawingTarget, 'test_line_1', handler)
   }
 }
 export {Snake}

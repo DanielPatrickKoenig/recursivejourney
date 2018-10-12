@@ -62,38 +62,45 @@ export default {
       var junction = self.getJunctionByID(id)
       snake.drawPath(junction.path, function () {
         junction.state = JourneyElementStates.OPEN
-        switch (junction.type) {
-          case JourneyElements.SPLIT:
-          {
-            for (var i = 0; i < junction.children.length; i++) {
-              self.executeJunction(junction.children[i], snake)
+        var i = 0
+        if (junction.autoAdvance) {
+          for (i = 0; i < junction.children.length; i++) {
+            self.executeJunction(junction.children[i], snake)
+          }
+        } else {
+          switch (junction.type) {
+            case JourneyElements.SPLIT:
+            {
+              for (i = 0; i < junction.children.length; i++) {
+                self.executeJunction(junction.children[i], snake)
+              }
+              break
             }
-            break
-          }
-          case JourneyElements.MESSAGE:
-          {
-            // var unfolder = new Unfolder(self.$data.pixiManager, junction.content, {width: 300, height: 200}).init()
-            // self.$data.pixiManager.app.stage.addChild(unfolder.container)
-            // unfolder.container.x = junction.position.x
-            // unfolder.container.y = junction.position.y
-            break
-          }
-          case JourneyElements.JUNCTION:
-          {
-            var img = self.$data.pixiManager.createImage(junction.content)
-            self.$data.pixiManager.app.stage.addChild(img)
-            img.x = junction.position.x
-            img.y = junction.position.y
-            break
-          }
-          case JourneyElements.YOUTUBE:
-          case JourneyElements.VIMEO:
-          {
-            break
-          }
-          case JourneyElements.HTML:
-          {
-            break
+            case JourneyElements.MESSAGE:
+            {
+              // var unfolder = new Unfolder(self.$data.pixiManager, junction.content, {width: 300, height: 200}).init()
+              // self.$data.pixiManager.app.stage.addChild(unfolder.container)
+              // unfolder.container.x = junction.position.x
+              // unfolder.container.y = junction.position.y
+              break
+            }
+            case JourneyElements.JUNCTION:
+            {
+              var img = self.$data.pixiManager.createImage(junction.content)
+              self.$data.pixiManager.app.stage.addChild(img)
+              img.x = junction.position.x
+              img.y = junction.position.y
+              break
+            }
+            case JourneyElements.YOUTUBE:
+            case JourneyElements.VIMEO:
+            {
+              break
+            }
+            case JourneyElements.HTML:
+            {
+              break
+            }
           }
         }
       })

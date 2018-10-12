@@ -1,6 +1,7 @@
 <template>
   <div>
     <button class="add-junction-button" v-on:click="addJunction">Add Junction</button>
+    <button class="save-journey-button" v-on:click="saveJourney">Save Journey</button>
     <div v-if="modalStates.add">
       <modalwindow>
         <div slot="content">
@@ -28,11 +29,12 @@
 </template>
 <script>
 import {EventBus} from './utils/EventBus.js'
-import {JourneyElements, BaseJourneyItem} from './utils/JourneyStates.js'
+import {JourneyElements, BaseJourneyItem, JourneyElementStates} from './utils/JourneyStates.js'
 import ModalWindowComponent from './ModalwindowComponent.vue'
 import JourneyItemForm from './JourneyItemForm.vue'
 import JourneyWireframe from './JourneyWireframe.vue'
 export default {
+  props: ['jdata'],
   components: {
     modalwindow: ModalWindowComponent,
     jform: JourneyItemForm,
@@ -40,7 +42,7 @@ export default {
   },
   data () {
     return {
-      journeyData: [],
+      journeyData: this.jdata,
       selectedJourneyItem: -1,
       modalStates: {
         add: false,
@@ -56,6 +58,15 @@ export default {
       self.$data.BaseJourneyItem = self.createBaseJourneyItem()
       self.$data.modalStates.add = true
     },
+    saveJourney: function (e) {
+      var self = this
+      for (var i = 0; i < self.$data.journeyData; i++) {
+        if (self.$data.journeyData[i].startingPoint) {
+          self.$data.journeyData[i].state = JourneyElementStates.OPEN
+        }
+      }
+      console.log(JSON.stringify(self.$data.journeyData))
+    },
     createBaseJourneyItem: function () {
       var item = JSON.parse(JSON.stringify(BaseJourneyItem))
       console.log(item)
@@ -67,7 +78,12 @@ export default {
     addItem: function (e) {
       var self = this
       if (self.submissionError === '') {
-        self.$data.journeyData.push(JSON.parse(JSON.stringify(self.$data.BaseJourneyItem)))
+        var newJunction = JSON.parse(JSON.stringify(self.$data.BaseJourneyItem))
+        if (newJunction.type === JourneyElements.SPLIT) {
+          newJunction.size.width = 50
+          newJunction.size.height = 50
+        }
+        self.$data.journeyData.push(newJunction)
         self.$data.modalStates.add = false
       }
     },
@@ -118,14 +134,23 @@ button.add-junction-button{
   right:0;
   z-index: 255;
 }
-ul.journey-item-list{
+button.save-journey-button{
   position:fixed;
   right:0;
-  top:30px;
   bottom:0;
-  width:300px;
+  z-index: 255;
+
+}
+ul.journey-item-list{
+  position: fixed;
+  right: 0;
+  top: 30px;
+  bottom: 30px;
+  width: 300px;
   overflow-y: auto;
   z-index: 250;
+  padding: 0;
+  margin: 0;
   > li{
     display:block;
     padding: 8px 0;
