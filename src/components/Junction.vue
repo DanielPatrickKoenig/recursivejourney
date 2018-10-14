@@ -42,6 +42,14 @@ export default {
 div.junction-element{
   z-index: 200;
   position: absolute;
+  opacity:1;
+  animation-name: fade-in;
+  animation-duration: 2s;
+
+}
+@keyframes fade-in {
+    from {opacity: 0;}
+    to {opacity: 1;}
 }
 div.video-junction{
   background-color:#000000;

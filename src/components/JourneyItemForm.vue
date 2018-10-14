@@ -16,6 +16,8 @@
     <label>Position 
       <label>X <input type="number" v-model="jitem.position.x" /></label>
       <label>Y <input type="number" v-model="jitem.position.y" /></label>
+      <label>Lock to Parent <input type="checkbox" v-model="jitem.position.lockToParent" /></label>
+      <label>Lock First Point to Parent <input type="checkbox" v-model="jitem.position.lockFirstPointToParent" /></label>
     </label>
     <label>Size 
       <label>Width <input type="number" v-model="jitem.size.width" /></label>

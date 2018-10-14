@@ -16,7 +16,7 @@ const BaseJourneyItem = {
   id: '',
   type: JourneyElements.SPLIT,
   state: JourneyElementStates.NONE,
-  position: {x: 0, y: 0},
+  position: {x: 0, y: 0, lockToParent: true, lockFirstPointToParent: true},
   size: {width: 100, height: 100},
   content: '',
   path: [],

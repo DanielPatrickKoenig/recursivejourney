@@ -73,6 +73,66 @@ export default {
         }
       }
       return index
+    },
+    positionItem: function (x, y, id, cOffset) {
+      var self = this
+      var index = self.getJunctionIndexByID(id)
+      // var materIndex = ndx !== undefined && ndx !== null ? ndx : index
+      var childOffset = cOffset !== undefined ? cOffset : {x: 0, y: 0}
+      if (index >= 0) {
+        self.$data.jitems[index].position.x = x
+        self.$data.jitems[index].position.y = y
+        var moveShift = {x: self.$data.jitems[index].position.x - self.$data.itemMoveOffset.x, y: self.$data.jitems[index].position.y - self.$data.itemMoveOffset.y}
+        for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
+          if (self.$data.jitems[index].path[i].lock || (cOffset !== undefined && cOffset !== null)) {
+            self.$data.jitems[index].path[i].x = Number(self.$data.itemMoveOffset.origins[index].path[i].x) + Number(moveShift.x) - childOffset.x
+            self.$data.jitems[index].path[i].y = Number(self.$data.itemMoveOffset.origins[index].path[i].y) + Number(moveShift.y) - childOffset.y
+            // self.$data.jitems[index].path[i].x = Number(self.$data.itemMoveOffset.origins[i].x) + Number(moveShift.x)
+            // self.$data.jitems[index].path[i].y = Number(self.$data.itemMoveOffset.origins[i].y) + Number(moveShift.y)
+          }
+        }
+        // console.log(self.getDescendants(id))
+        var descendants = self.getLockedDescendants(id)
+        console.log(descendants)
+        for (var j = 0; j < descendants.length; j++) {
+          var jindex = self.getJunctionIndexByID(descendants[j])
+          var childX = Number(self.$data.itemMoveOffset.origins[jindex].x) + Number(moveShift.x)
+          var childY = Number(self.$data.itemMoveOffset.origins[jindex].y) + Number(moveShift.y)
+          var childXAlt = Number(self.$data.itemMoveOffset.origins[jindex].x) - Number(self.$data.itemMoveOffset.origins[index].x)
+          var childYAlt = Number(self.$data.itemMoveOffset.origins[jindex].y) - Number(self.$data.itemMoveOffset.origins[index].y)
+          if (cOffset === undefined || cOffset === null) {
+            self.positionItem(childX, childY, descendants[j], {x: childXAlt, y: childYAlt})
+          }
+        }
+      }
+    },
+    reguildOrigins: function () {
+      var self = this
+      self.$data.itemMoveOffset.origins = []
+      for (var i = 0; i < self.$data.jitems.length; i++) {
+        self.$data.itemMoveOffset.origins[i] = {x: self.$data.jitems[i].position.x, y: self.$data.jitems[i].position.y, path: []}
+        for (var j = 0; j < self.$data.jitems[i].path.length; j++) {
+          self.$data.itemMoveOffset.origins[i].path.push({x: self.$data.jitems[i].path[j].x, y: self.$data.jitems[i].path[j].y})
+        }
+      }
+      // for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
+      //   self.$data.itemMoveOffset.origins.push({x: self.$data.jitems[index].path[i].x, y: self.$data.jitems[index].path[i].y})
+      // }
+    },
+    getLockedDescendants: function (id, list) {
+      var self = this
+      if (list === undefined || list === null) {
+        list = []
+      }
+      var index = self.getJunctionIndexByID(id)
+      for (var j = 0; j < self.$data.jitems[index].children.length; j++) {
+        var jindex = self.getJunctionIndexByID(self.$data.jitems[index].children[j])
+        if (self.$data.jitems[jindex].position.lockToParent) {
+          list.push(self.$data.jitems[index].children[j])
+          self.getLockedDescendants(self.$data.jitems[index].children[j], list)
+        }
+      }
+      return list
     }
   },
   computed: {
@@ -97,21 +157,22 @@ export default {
     })
     EventBus.$on('draggable-element-move' + self.$data.signatures.itemMover, (n) => {
       // console.log(self.$data.jitems[self.$data.selectedItemIndex].path[Number(n.dragid)])
-      var index = self.getJunctionIndexByID(n.dragid)
-      console.log(n.dragid)
-      console.log(index)
-      if (index >= 0) {
-        self.$data.jitems[index].position.x = n.position.left
-        self.$data.jitems[index].position.y = n.position.top
-        var moveShift = {x: self.$data.jitems[index].position.x - self.$data.itemMoveOffset.x, y: self.$data.jitems[index].position.y - self.$data.itemMoveOffset.y}
-        for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
-          if (self.$data.jitems[index].path[i].lock) {
-            self.$data.jitems[index].path[i].x = Number(self.$data.itemMoveOffset.origins[i].x) + Number(moveShift.x)
-            self.$data.jitems[index].path[i].y = Number(self.$data.itemMoveOffset.origins[i].y) + Number(moveShift.y)
-          }
-        }
-      }
-      console.log(n)
+      self.positionItem(n.position.left, n.position.top, n.dragid)
+      // var index = self.getJunctionIndexByID(n.dragid)
+      // console.log(n.dragid)
+      // console.log(index)
+      // if (index >= 0) {
+      //   self.$data.jitems[index].position.x = n.position.left
+      //   self.$data.jitems[index].position.y = n.position.top
+      //   var moveShift = {x: self.$data.jitems[index].position.x - self.$data.itemMoveOffset.x, y: self.$data.jitems[index].position.y - self.$data.itemMoveOffset.y}
+      //   for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
+      //     if (self.$data.jitems[index].path[i].lock) {
+      //       self.$data.jitems[index].path[i].x = Number(self.$data.itemMoveOffset.origins[i].x) + Number(moveShift.x)
+      //       self.$data.jitems[index].path[i].y = Number(self.$data.itemMoveOffset.origins[i].y) + Number(moveShift.y)
+      //     }
+      //   }
+      // }
+      // console.log(n)
     })
     EventBus.$on('draggable-element-down' + self.$data.signatures.itemMover, (n) => {
       // console.log(self.$data.jitems[self.$data.selectedItemIndex].path[Number(n.dragid)])
@@ -120,10 +181,11 @@ export default {
       var index = self.getJunctionIndexByID(n.dragid)
       self.$data.itemMoveOffset.x = self.$data.jitems[index].position.x
       self.$data.itemMoveOffset.y = self.$data.jitems[index].position.y
-      self.$data.itemMoveOffset.origins = []
-      for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
-        self.$data.itemMoveOffset.origins.push({x: self.$data.jitems[index].path[i].x, y: self.$data.jitems[index].path[i].y})
-      }
+      self.reguildOrigins()
+      // self.$data.itemMoveOffset.origins = []
+      // for (var i = 0; i < self.$data.jitems[index].path.length; i++) {
+      //   self.$data.itemMoveOffset.origins.push({x: self.$data.jitems[index].path[i].x, y: self.$data.jitems[index].path[i].y})
+      // }
       EventBus.$emit('update-selection-index', self.getJunctionIndexByID(n.dragid))
       // self.selctedindex = self.getJunctionIndexByID(n.dragid)
     })
