@@ -12,14 +12,24 @@
         <option v-for="(v, k, i) in JourneyElements" :key="'journeyElement_'+i.toString()" :value="v">{{k}}</option>
       </select>
     </label>
+    <label v-if="jitem.type == JourneyElements.JUNCTION">
+      Junction Type
+      <select v-model="jitem.junctionID" v-on:click="onJunctionSubtypeSelected(jitem.junctionID)">
+        <option :value="-1">Select a junction type</option>
+        <option v-for="(v, i) in JunctionManifest" :key="'junctiontype_'+i.toString()" :value="i">
+          {{v.label}}
+        </option>
+      </select>
+    </label>
     <label>Content <input type="text" v-model="jitem.content" /></label>
     <label>Position 
       <label>X <input type="number" v-model="jitem.position.x" /></label>
       <label>Y <input type="number" v-model="jitem.position.y" /></label>
       <label>Lock to Parent <input type="checkbox" v-model="jitem.position.lockToParent" /></label>
-      <label>Lock First Point to Parent <input type="checkbox" v-model="jitem.position.lockFirstPointToParent" /></label>
+      <!-- <label>Lock First Point to Parent <input type="checkbox" v-model="jitem.position.lockFirstPointToParent" /></label> -->
     </label>
-    <label>Size 
+    <label v-if="jitem.type != JourneyElements.SPLIT">
+      Size 
       <label>Width <input type="number" v-model="jitem.size.width" /></label>
       <label>Height <input type="number" v-model="jitem.size.height" /></label>
     </label>
@@ -55,12 +65,14 @@
 
 <script>
 import {JourneyElements} from './utils/JourneyStates.js'
+import {JunctionManifest} from './JunctionManifest.js'
 export default {
   props: ['item', 'items', 'isnew'],
   data () {
     return {
       jitem: this.item,
       JourneyElements: JourneyElements,
+      JunctionManifest: JunctionManifest,
       jouneyData: this.items,
       defaultChildProps: {
         tempChild: '',
@@ -98,6 +110,10 @@ export default {
     deleteChild: function (index) {
       var self = this
       self.$data.jitem.children.splice(index, 1)
+    },
+    onJunctionSubtypeSelected: function (id) {
+      var self = this
+      self.$data.jitem.customParams = id >= 0 ? JSON.parse(JSON.stringify(JunctionManifest[id].params)) : {}
     }
   },
   mounted: function () {

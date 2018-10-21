@@ -10,6 +10,11 @@
       <span v-if="ignorestate"></span>
     </div>
   </div>
+  <div v-else-if="shouldShow(JourneyElements.JUNCTION) && ignorestate" :class="renderClasses('junction-junction')" :style="'left:'+junction.position.x+'px;top:'+junction.position.y+'px;width:'+splitSize.width+'px;height:'+splitSize.height+'px;'">
+    <div>
+      X
+    </div>
+  </div>
 </template>
 <script>
 import {EventBus} from './utils/EventBus.js'

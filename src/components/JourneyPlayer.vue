@@ -12,6 +12,7 @@ import {PixiManager} from './utils/pixi/PixiHelper.js'
 import {Snake} from './utils/Snake.js'
 // import {Unfolder} from './utils/pixi/Unfolder.js'
 import {JourneyElements, JourneyElementStates} from './utils/JourneyStates.js'
+import {JunctionManifest} from './JunctionManifest.js'
 import Junction from './Junction.vue'
 export default {
   props: ['jdata'],
@@ -57,6 +58,16 @@ export default {
       }
       return junction
     },
+    getJunctionIndexByID: function (id) {
+      var self = this
+      var junctionIndex = -1
+      for (var i = 0; i < self.$data.journeyData.length; i++) {
+        if (self.$data.journeyData[i].id === id) {
+          junctionIndex = i
+        }
+      }
+      return junctionIndex
+    },
     executeJunction: function (id, snake) {
       var self = this
       var junction = self.getJunctionByID(id)
@@ -68,6 +79,13 @@ export default {
             self.executeJunction(junction.children[i], snake)
           }
         } else {
+          for (i = 0; i < junction.children.length; i++) {
+            // console.log(junction.children[i])
+            // console.log(self.getJunctionByID(junction.children[i]).path)
+            if (self.getJunctionByID(junction.children[i]).path.length === 0) {
+              self.executeJunction(junction.children[i], snake)
+            }
+          }
           switch (junction.type) {
             case JourneyElements.SPLIT:
             {
@@ -86,10 +104,24 @@ export default {
             }
             case JourneyElements.JUNCTION:
             {
-              var img = self.$data.pixiManager.createImage(junction.content)
-              self.$data.pixiManager.app.stage.addChild(img)
-              img.x = junction.position.x
-              img.y = junction.position.y
+              if (junction.junctionID >= 0) {
+                var jctn = JunctionManifest[junction.junctionID].method(self.$data.pixiManager, junction)
+                // junction.sizable = JunctionManifest[junction.junctionID].sizable
+                self.$data.pixiManager.app.stage.addChild(jctn)
+                jctn.x = junction.position.x
+                jctn.y = junction.position.y
+                if (JunctionManifest[junction.junctionID].params.clickable) {
+                  jctn.interactive = true
+                  jctn.on('click', function (e) {
+                    self.onJourneyMapElementClicked(junction)
+                  })
+                }
+              }
+              // var jnctn = JunctionManifest
+              // var img = self.$data.pixiManager.createImage(junction.content)
+              // self.$data.pixiManager.app.stage.addChild(img)
+              // img.x = junction.position.x
+              // img.y = junction.position.y
               break
             }
             case JourneyElements.YOUTUBE:

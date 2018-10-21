@@ -7,16 +7,25 @@
       <junction :junction="d" ignorestate="true" v-for="(d, i) in jitems" :key="'junction_'+i.toString()"></junction>
     </div>
     <div>
-      <dragger v-for="(t, i) in jitems" :key="'itemdragger_'+i.toString()" :activatorstring="'item'+i.toString()" :coords="{left: t.position.x, top: t.position.y}" :size="{width: t.size.width, height: t.size.height}" :dragid="t.id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.itemMover">
+      <dragger v-for="(t, i) in jitems" :key="'itemdragger_'+i.toString()" :activatorstring="'item'+i.toString()" :coords="{left: t.position.x, top: t.position.y}" :size="isSizable(t) ? {width: t.size.width, height: t.size.height} : {width: 50, height: 50}" :dragid="t.id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.itemMover">
         <div slot="content" class="item-dragger-bounds"></div>
       </dragger>
-      <dragger v-if="i == selctedindex && t.type != JourneyElements.SPLIT" v-for="(t, i) in jitems" :key="'itemSizedragger_'+i.toString()" :activatorstring="'item'+i.toString()" :coords="{left: Number(t.position.x) - Number(pointSize.width / 2) + Number(t.size.width), top: Number(t.position.y) - Number(pointSize.height / 2) + Number(t.size.height)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="t.id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.itemSizer">
+      <dragger v-if="i == selctedindex && t.type != JourneyElements.SPLIT && isSizable(t)" v-for="(t, i) in jitems" :key="'itemSizedragger_'+i.toString()" :activatorstring="'item'+i.toString()" :coords="{left: Number(t.position.x) - Number(pointSize.width / 2) + Number(t.size.width), top: Number(t.position.y) - Number(pointSize.height / 2) + Number(t.size.height)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="t.id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.itemSizer">
         <div slot="content" class="item-size-dragger-bounds"></div>
       </dragger>
+      <span v-if="selctedindex >= 0">
+        <button v-if="jitems[selctedindex].path.length == 0" v-on:click="onPathButtonClicked(jitems[selctedindex])" class="point-starter-button" :style="getPathbuttonStyle(jitems[selctedindex])"></button>
+        <!-- <dragger v-if="jitems[selctedindex].path.length == 0" :activatorstring="'startPoint'+selctedindex.toString()" :coords="{left: Number(jitems[selctedindex].position.x) + Number(jitems[selctedindex].size.width / 2),  top: Number(jitems[selctedindex].position.y) + Number(jitems[selctedindex].size.height / 2)}" :size="{width: pointSize.width * 2, height: pointSize.height * 2}" :dragid="jitems[selctedindex].id" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.pointStarter">
+          <div slot="content" class="point-starter-bounds"></div>
+        </dragger> -->
+      </span>
       <span v-for="(g, j) in jitems" :key="g+'_'+j.toString()">
-        <dragger v-if="j == selctedindex" v-for="(p, i) in jitems[j].path" :key="'selectepathmarker_'+j.toString()+'.'+i.toString()" :activatorstring="'point'+i.toString()" :coords="{left: p.x - (pointSize.width / 2), top: p.y - (pointSize.height / 2)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="j.toString()+'_'+i.toString()" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.pointMover">
-          <div slot="content" class="point-dragger-bounds"></div>
-        </dragger>
+        <span v-if="j == selctedindex" v-for="(p, i) in jitems[j].path" :key="'selectepathmarker_'+j.toString()+'.'+i.toString()">
+          <button v-if="i > 0" v-on:click="onPathButtonClicked(jitems[j], i)" class="point-starter-button" :style="getPathbuttonStyle(jitems[j], i)"></button>
+          <dragger :activatorstring="'point'+i.toString()" :coords="{left: p.x - (pointSize.width / 2), top: p.y - (pointSize.height / 2)}" :size="{width: pointSize.width, height: pointSize.height}" :dragid="j.toString()+'_'+i.toString()" :activez="z.active" :inactivez="z.inactive-1" bg="transparent" :disabled="false" :signature="signatures.pointMover">
+            <div slot="content" class="point-dragger-bounds"></div>
+          </dragger>
+        </span>
       </span>
     </div>
   </div>
@@ -46,7 +55,8 @@ export default {
       signatures: {
         pointMover: 'pointmoversignaturestring',
         itemMover: 'itemmoversignaturestring',
-        itemSizer: 'itemsizersignaturestring'
+        itemSizer: 'itemsizersignaturestring',
+        pointStarter: 'pointstartersignaturestring'
       },
       itemMoveOffset: {x: 0, y: 0, origins: []},
       JourneyElements: JourneyElements
@@ -133,6 +143,42 @@ export default {
         }
       }
       return list
+    },
+    isSizable: function (junction) {
+      var sizable = true
+      if (junction.customParams !== undefined) {
+        if (junction.customParams.sizable !== undefined) {
+          if (junction.customParams.sizable === false) {
+            sizable = false
+          }
+        }
+      }
+      return sizable
+    },
+    getPathbuttonStyle: function (junction, index) {
+      var styleString = ''
+      if (index === undefined || index === null) {
+        styleString = 'left:' + (Number(junction.position.x) + Number(junction.size.width / 2)).toString() + 'px;top:' + (Number(junction.position.y) + Number(junction.size.height / 2)).toString() + 'px;'
+      } else {
+        var xVal = Number(junction.path[index].x) + ((Number(junction.path[index - 1].x) - Number(junction.path[index].x)) / 2)
+        var yVal = Number(junction.path[index].y) + ((Number(junction.path[index - 1].y) - Number(junction.path[index].y)) / 2)
+        styleString = 'left:' + xVal.toString() + 'px;top:' + yVal.toString() + 'px;'
+      }
+      return styleString
+    },
+    onPathButtonClicked: function (junction, index) {
+      var isFirstPoint = index === undefined || index === null
+      var pointPos = {x: 0, y: 0}
+      if (isFirstPoint) {
+        pointPos = {x: Number(junction.position.x) + Number(junction.size.width / 2), y: Number(junction.position.y) + Number(junction.size.height / 2)}
+        junction.path.push({x: pointPos.x, y: pointPos.y, lock: true})
+        junction.path.push({x: pointPos.x - 50, y: pointPos.y, lock: true})
+      } else {
+        var xVal = Number(junction.path[index].x) + ((Number(junction.path[index - 1].x) - Number(junction.path[index].x)) / 2)
+        var yVal = Number(junction.path[index].y) + ((Number(junction.path[index - 1].y) - Number(junction.path[index].y)) / 2)
+        pointPos = {x: xVal, y: yVal}
+        junction.path.splice(index, 0, {x: pointPos.x, y: pointPos.y, lock: true})
+      }
     }
   },
   computed: {
@@ -237,14 +283,31 @@ div.point-dragger-bounds{
   height: 10px;
   background-color: #cc0000;
 }
+div.point-starter-bounds{
+  width:20px;
+  height: 20px;
+  background-color: #cc0000;
+}
 div.item-dragger-bounds{
   width:100%;
   height: 100%;
   background-color: rgba(0,0,0,.2);
 }
+
 div.item-size-dragger-bounds{
   width:10px;
   height: 10px;
   background-color: #00cc00;
+}
+button.point-starter-button{
+  position: absolute;
+  z-index: 3000;
+  width:30px;
+  height: 30px;
+  margin-top:-15px;
+  margin-left:-15px;
+}
+button.point-starter-button:after{
+  content: "\22B6";
 }
 </style>

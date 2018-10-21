@@ -14,7 +14,12 @@
         </div>
       </modalwindow>
     </div>
-    <ul class="journey-item-list">
+    <div class="properties-panel">
+      <jform v-if="selectedJourneyItem >= 0" class="journey-form-toggle journey-form-open" :item="journeyData[selectedJourneyItem]" :items="journeyData" :isnew="false">
+      </jform>
+    </div>
+    
+    <!-- <ul class="journey-item-list">
       <li v-for="(d, i) in journeyData" :key="'jourenyitem_'+i.toString()">
         <a class="delete-item" :index="i" v-on:click="deleteItem"></a>
         <jform :class="selectedJourneyItem == i ? 'journey-form-toggle journey-form-open' : 'journey-form-toggle'" :item="d" :items="journeyData" :isnew="false">
@@ -23,7 +28,7 @@
           </span>
         </jform>
       </li>
-    </ul>
+    </ul> -->
     <wireframe :items="journeyData" :selctedindex="selectedJourneyItem"></wireframe>
   </div>
 </template>
@@ -140,6 +145,18 @@ button.save-journey-button{
   bottom:0;
   z-index: 255;
 
+}
+div.properties-panel
+{
+  position: fixed;
+  right: 0;
+  top: 30px;
+  bottom: 30px;
+  width: 300px;
+  overflow-y: auto;
+  z-index: 250;
+  padding: 0;
+  margin: 0;
 }
 ul.journey-item-list{
   position: fixed;
